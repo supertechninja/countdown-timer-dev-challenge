@@ -1,6 +1,6 @@
 # The Final Countdown
 
-![Workflow result](https://github.com/jtmacnb/countdown-timer-dev-challenge/workflows/Check/badge.svg)
+![Workflow result](https://github.com/supertechninja/countdown-timer-dev-challenge/workflows/Check/badge.svg)
 
 
 ## :scroll: Description
