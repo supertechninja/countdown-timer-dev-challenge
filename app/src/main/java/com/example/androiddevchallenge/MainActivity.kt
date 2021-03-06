@@ -16,46 +16,302 @@
 package com.example.androiddevchallenge
 
 import android.os.Bundle
+import android.os.CountDownTimer
+import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.animation.core.animate
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.Button
+import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.FloatingActionButton
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.Scaffold
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
+import androidx.compose.material.TopAppBar
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Undo
+import androidx.compose.material.icons.outlined.PauseCircleOutline
+import androidx.compose.material.icons.outlined.PlayCircleOutline
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameMillis
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.androiddevchallenge.ui.theme.MyTheme
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import java.util.Calendar
+import kotlin.math.min
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             MyTheme {
-                MyApp()
+                CircularClock()
             }
         }
     }
 }
 
-// Start building your app here!
 @Composable
-fun MyApp() {
-    Surface(color = MaterialTheme.colors.background) {
-        Text(text = "Ready... Set... GO!")
+private fun CircularClock() {
+    val scope = rememberCoroutineScope()
+    val previousTimerJob by remember { mutableStateOf<Job?>(null) }
+
+    var minutes by remember { mutableStateOf(0) }
+    var seconds by remember { mutableStateOf(0) }
+
+    val totalDurationSeconds = totalTimeSeconds(minutes, seconds)
+    var remainingTime by remember { mutableStateOf(totalDurationSeconds) }
+    var timerState by remember { mutableStateOf(TimerState.Paused) }
+
+    var toggleCount by remember { mutableStateOf(0) }
+
+    fun startCounter(fromLatestValue: Boolean = false) {
+        val initialValue = if (fromLatestValue) remainingTime else totalDurationSeconds
+        timerState = TimerState.Running
+        previousTimerJob?.cancel() // Cancel previous ongoing Job when restarting - no leaking.
+        scope.launch {
+            val startTime = withFrameMillis { it }
+            if (remainingTime == 0L) {
+                remainingTime = initialValue
+            }
+            while (remainingTime > 0 && timerState != TimerState.Paused) {
+                val elapsedTime = (withFrameMillis { it } - startTime) / 1000
+                remainingTime = initialValue - elapsedTime
+            }
+        }
+    }
+
+    fun toggleTimerState() {
+        if (timerState == TimerState.Running) {
+            timerState = TimerState.Paused
+        } else {
+            if (toggleCount == 0) {
+                startCounter(fromLatestValue = false)
+                toggleCount++
+            } else {
+                startCounter(fromLatestValue = true)
+            }
+        }
+    }
+
+    fun reset() {
+        remainingTime = 0
+        toggleCount = 0
+        minutes = 0
+        seconds = 0
+    }
+
+    var printMinutes = if (remainingTime > 0) {
+        (remainingTime / 60).toInt()
+    } else {
+        minutes
+    }
+
+    var printSeconds = if (remainingTime > 0) {
+        (remainingTime - printMinutes * 60).toInt()
+    } else {
+        seconds
+    }
+
+    val progress: Float = (printSeconds.toFloat() / 60f)
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.aspectRatio(1f)) {
+            var defaultPadding = 8.dp
+            repeat(printMinutes) {
+                CircularProgressIndicator(
+                    progress = 1f, color = Color.White, modifier = Modifier
+                        .padding(defaultPadding)
+                        .fillMaxSize()
+                )
+                defaultPadding += 12.dp
+            }
+
+            CircularProgressIndicator(
+                progress = progress, color = MaterialTheme.colors.secondary, modifier = Modifier
+                    .fillMaxSize()
+                    .padding(defaultPadding), strokeWidth = 5.dp
+            )
+
+
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    IconButton(onClick = { minutes += 1 }) {
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowUp,
+                            contentDescription = "",
+                            tint = Color.White
+                        )
+                    }
+                    Spacer(modifier = Modifier.requiredWidth(8.dp))
+                    IconButton(onClick = { seconds += 5 }) {
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowUp,
+                            contentDescription = "",
+                            tint = Color.White
+                        )
+                    }
+                }
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    val timeText = with(AnnotatedString.Builder("${printMinutes}")) {
+                        pushStyle(SpanStyle(fontSize = 24.sp))
+                        append("m")
+                        pop()
+                        append(" ${printSeconds}")
+                        pushStyle(SpanStyle(fontSize = 24.sp))
+                        append("s")
+                        toAnnotatedString()
+                    }
+
+                    Text(
+                        text = timeText,
+                        style = MaterialTheme.typography.h3.copy(fontWeight = FontWeight.Black),
+                        color = Color.White
+                    )
+                }
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    IconButton(onClick = { minutes -= 1 }) {
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowDown,
+                            contentDescription = "",
+                            tint = Color.White
+                        )
+                    }
+                    Spacer(modifier = Modifier.requiredWidth(8.dp))
+                    IconButton(onClick = { seconds -= 5 }) {
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowDown,
+                            contentDescription = "",
+                            tint = Color.White
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.requiredHeight(16.dp))
+
+        Row(
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+
+            val roundedCorners by animateIntAsState(targetValue = if (timerState == TimerState.Running) 50 else 10)
+            FloatingActionButton(
+                onClick = {
+                    toggleTimerState()
+                },
+                backgroundColor = MaterialTheme.colors.primary,
+                shape = RoundedCornerShape(roundedCorners)
+            ) {
+                val padding by animateDpAsState(targetValue = if (timerState == TimerState.Running) 32.dp else 8.dp)
+
+                Image(
+                    imageVector = if (timerState == TimerState.Running) Icons.Outlined.PauseCircleOutline else Icons.Outlined.PlayCircleOutline,
+                    contentDescription = "",
+                    colorFilter = ColorFilter.tint(Color.White),
+                    modifier = Modifier
+                        .padding(horizontal = padding)
+                        .requiredSize(36.dp)
+                )
+            }
+
+            FloatingActionButton(
+                onClick = {
+                    reset()
+                },
+                backgroundColor = MaterialTheme.colors.primary,
+                shape = RoundedCornerShape(roundedCorners)
+            ) {
+                Image(
+                    imageVector = Icons.Default.Clear,
+                    contentDescription = "",
+                    colorFilter = ColorFilter.tint(Color.White),
+                    modifier = Modifier
+                        .padding(horizontal = 12.dp)
+                        .requiredSize(36.dp)
+                )
+            }
+        }
     }
 }
 
-@Preview("Light Theme", widthDp = 360, heightDp = 640)
-@Composable
-fun LightPreview() {
-    MyTheme {
-        MyApp()
-    }
+enum class TimerState {
+    Running, Paused
 }
 
-@Preview("Dark Theme", widthDp = 360, heightDp = 640)
-@Composable
-fun DarkPreview() {
-    MyTheme(darkTheme = true) {
-        MyApp()
-    }
-}
+private fun totalTimeSeconds(minutes: Int, seconds: Int): Long = minutes * 60L + seconds
