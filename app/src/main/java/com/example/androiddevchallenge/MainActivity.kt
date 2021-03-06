@@ -16,16 +16,10 @@
 package com.example.androiddevchallenge
 
 import android.os.Bundle
-import android.os.CountDownTimer
-import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateIntAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,40 +27,26 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.requiredWidth
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.Button
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Surface
 import androidx.compose.material.Text
-import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.Undo
 import androidx.compose.material.icons.outlined.PauseCircleOutline
 import androidx.compose.material.icons.outlined.PlayCircleOutline
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -75,26 +55,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.androiddevchallenge.ui.theme.MyTheme
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import java.util.Calendar
-import kotlin.math.min
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -180,7 +150,8 @@ private fun CircularClock() {
             var defaultPadding = 8.dp
             repeat(printMinutes) {
                 CircularProgressIndicator(
-                    progress = 1f, color = Color.White, modifier = Modifier
+                    progress = 1f, color = Color.White,
+                    modifier = Modifier
                         .padding(defaultPadding)
                         .fillMaxSize()
                 )
@@ -188,11 +159,12 @@ private fun CircularClock() {
             }
 
             CircularProgressIndicator(
-                progress = progress, color = MaterialTheme.colors.secondary, modifier = Modifier
+                progress = progress, color = MaterialTheme.colors.secondary,
+                modifier = Modifier
                     .fillMaxSize()
-                    .padding(defaultPadding), strokeWidth = 5.dp
+                    .padding(defaultPadding),
+                strokeWidth = 5.dp
             )
-
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -223,11 +195,11 @@ private fun CircularClock() {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    val timeText = with(AnnotatedString.Builder("${printMinutes}")) {
+                    val timeText = with(AnnotatedString.Builder("$printMinutes")) {
                         pushStyle(SpanStyle(fontSize = 24.sp))
                         append("m")
                         pop()
-                        append(" ${printSeconds}")
+                        append(" $printSeconds")
                         pushStyle(SpanStyle(fontSize = 24.sp))
                         append("s")
                         toAnnotatedString()
