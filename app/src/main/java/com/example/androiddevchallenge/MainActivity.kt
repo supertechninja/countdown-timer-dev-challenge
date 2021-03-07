@@ -18,8 +18,11 @@ package com.example.androiddevchallenge
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -55,14 +58,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.androiddevchallenge.ui.theme.MyTheme
+import com.example.androiddevchallenge.ui.theme.purple200
+import com.example.androiddevchallenge.ui.theme.purple500
+import com.example.androiddevchallenge.ui.theme.purple700
+import com.example.androiddevchallenge.ui.theme.teal200
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
@@ -141,6 +152,11 @@ private fun CircularClock() {
 
     val progress: Float = (printSeconds.toFloat() / 60f)
 
+    val progressAngle by animateFloatAsState(
+        targetValue = (360f * (printSeconds.toFloat() / 60f)),
+        animationSpec = tween(durationMillis = 1000, easing = LinearOutSlowInEasing)
+    )
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -149,21 +165,51 @@ private fun CircularClock() {
         Box(contentAlignment = Alignment.Center, modifier = Modifier.aspectRatio(1f)) {
             var defaultPadding = 8.dp
             repeat(printMinutes) {
-                CircularProgressIndicator(
-                    progress = 1f, color = Color.White,
+                Box(
                     modifier = Modifier
-                        .padding(defaultPadding)
                         .fillMaxSize()
+                        .padding(defaultPadding)
+                        .drawBehind {
+                            drawArc(
+                                brush = Brush.verticalGradient(
+                                    listOf(
+                                        purple200,
+                                        purple500,
+                                        purple700,
+                                        teal200
+                                    )
+                                ),
+                                startAngle = 0f,
+                                sweepAngle = 360f,
+                                useCenter = false,
+                                style = Stroke(width = 20f)
+                            )
+                        }
                 )
+
                 defaultPadding += 12.dp
             }
 
-            CircularProgressIndicator(
-                progress = progress, color = MaterialTheme.colors.secondary,
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(defaultPadding),
-                strokeWidth = 5.dp
+                    .padding(defaultPadding)
+                    .drawBehind {
+                        drawArc(
+                            brush = Brush.verticalGradient(
+                                listOf(
+                                    purple200,
+                                    purple500,
+                                    purple700,
+                                    teal200
+                                )
+                            ),
+                            startAngle = -90f,
+                            sweepAngle = progressAngle,
+                            useCenter = false,
+                            style = Stroke(width = 20f, cap = StrokeCap.Round)
+                        )
+                    }
             )
 
             Column(
